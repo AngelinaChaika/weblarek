@@ -250,11 +250,13 @@ type TPayment = "card" | "cash";
 `getProducts(): Promise<IProductListResponse>` - выполняет GET-запрос на эндпоинт `/product/` и возвращает объект со списком товаров, полученных с сервера, и их количеством.
 `postOrder(order: IOrderRequest): Promise<IOrderResponse>` - выполняет POST-запрос на эндпоинт `/order/`, отправляет данные заказа и возвращает ответ сервера с подтверждением покупки или ошибкой.
 
-#### Типы для работы с сервером
+#### Типы и интерфейсы для работы с сервером
 
 ##### Ответ со списком товаров
 
-`IProductListResponse = IProductListSuccessResponse | IErrorResponse`
+```ts
+IProductListResponse = IProductListSuccessResponse | IErrorResponse;
+```
 
 Описание:
 Тип ответа при запросе списка товаров.
@@ -263,7 +265,12 @@ type TPayment = "card" | "cash";
 
 ##### Успешный ответ со списком товаров
 
-`IProductListSuccessResponse`
+```ts
+interface IProductListSuccessResponse {
+  total: number;
+  items: IProduct[];
+}
+```
 
 Описание:
 Объект, содержащий список товаров и их общее количество.
@@ -272,7 +279,9 @@ type TPayment = "card" | "cash";
 
 ##### Ответ при оформлении заказа
 
-`IOrderResponse = IOrderSuccessResponse | IErrorResponse`
+```ts
+IOrderResponse = IOrderSuccessResponse | IErrorResponse;
+```
 
 Описание:
 Тип ответа при отправке заказа.
@@ -281,7 +290,12 @@ type TPayment = "card" | "cash";
 
 ##### Успешный ответ заказа
 
-`IOrderSuccessResponse`
+```ts
+interface IOrderSuccessResponse {
+  id: string;
+  total: number;
+}
+```
 
 Описание:
 Подтверждение успешного оформления заказа.
@@ -290,7 +304,11 @@ type TPayment = "card" | "cash";
 
 ##### Ошибка
 
-`IErrorResponse`
+```ts
+interface IErrorResponse {
+  error: string;
+}
+```
 
 Описание:
 Объект, возвращаемый сервером при ошибке.
@@ -298,7 +316,12 @@ type TPayment = "card" | "cash";
 
 ##### Запрос на отправку заказа
 
-`IOrderRequest`
+```ts
+type IOrderRequest = IBuyer & {
+  total: number;
+  items: string[];
+};
+```
 
 Описание:
 Объект, отправляемый на сервер при оформлении заказа.
