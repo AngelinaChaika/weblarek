@@ -156,19 +156,16 @@ interface IBuyer {
 - `phone` - номер телефона покупателя
 - `address` - адрес доставки
 
-#### Интерфейс валидации ошибок
+#### Тип валидации ошибок
 
 ```ts
-interface IValidationResult {
-  isValid: boolean;
-  errors: Partial<Record<keyof IBuyer, string>>;
-}
+type IValidationResult = Partial<Record<keyof IBuyer, string>>;
 ```
 
-Описание полей:
+Описание:
 
-- `isValid` - общий результат валидации (true - все поля валидны, false - есть ошибки).
-- `errors` - объект с ошибками валидации по полям. Ключ - имя поля, значение - текст ошибки.
+- Тип возможных ошибок при валидации данных покупателя.
+- Возвращает объект с ошибками валидации по полям. Ключ - имя поля, значение - текст ошибки.
 
 #### Типы оплаты
 
@@ -189,21 +186,21 @@ type TPayment = "card" | "cash";
 
 - `constructor()` - создаёт пустую модель каталога с начальными значениями:
 
-- `_products` - пустой массив.
-- `_selectedProduct` - `null`.
+- `products` - пустой массив.
+- `selectedProduct` - `null`.
 
 Поля класса:
 
-- `_products: IProduct[] = []` - хранение массива всех товаров, полученных из API.
-- `_selectedProduct: IProduct | null = null` - хранение выбранного товара для подробного отображения.
+- `products: IProduct[] = []` - хранение массива всех товаров, полученных из API.
+- `selectedProduct: IProduct | undefined = undefined` - хранение выбранного товара для подробного отображения.
 
 Методы класса:
 
 - `setProducts(products: IProduct[]): void` - сохранение переданного массива товаров.
 - `getProducts(): IProduct[]` - получение массива всех товаров.
-- `getProductById(id: string): IProduct | null` - поиск товара по его id (или `null`, если товар не найден).
+- `getProductById(id: string): IProduct | undefined` - поиск товара по его id (или `undefined`, если товар не найден).
 - `setSelectedProduct(id: string): void` - сохранение товара по id как выбранного.
-- `getSelectedProduct(): IProduct | null` - получение выбранного товара (или `null`, если товар не выбран).
+- `getSelectedProduct(): IProduct | undefined` - получение выбранного товара (или `undefined`, если товар не выбран).
 
 #### Класс CartModel
 
@@ -213,11 +210,11 @@ type TPayment = "card" | "cash";
 
 - `constructor()` - создаёт пустую модель корзины с начальным значением:
 
-- `_products` - пустой массив.
+- `products` - пустой массив.
 
 Поля класса:
 
-- `_products: IProduct[] = []` - хранение массива товаров, выбранных покупателем для покупки.
+- `products: IProduct[] = []` - хранение массива товаров, выбранных покупателем для покупки.
 
 Методы класса:
 
@@ -242,9 +239,7 @@ type TPayment = "card" | "cash";
 
 Поля класса:
 
-- `_buyerData: IBuyer = {payment: null, email: "", phone: "", address: ""}` - данные о покупателе ( на основе интерфейса IBuyer).
-- `_errors: Partial<Record<keyof IBuyer, string>> = {}` - хранит ошибки валидации по полям.
-- `_errorMessages: Record<keyof IBuyer, string>` - хранит справочник сообщений об ошибке валидации по полям.
+- `buyerData: IBuyer = {payment: null, email: "", phone: "", address: ""}` - данные о покупателе ( на основе интерфейса IBuyer).
 
 Методы класса:
 
@@ -252,7 +247,7 @@ type TPayment = "card" | "cash";
 - `getData(): IBuyer` - получение всех данных покупателя.
 - `clear(): void` - очищает данные покупателя и ошибки валидации.
 - `validateField(field: keyof IBuyer, value: string | null): string | null` - проверяет одно поле. Возвращает текст ошибки, если поле пустое, или `null`, если поле валидно.
-- `validate(): IValidationResult` - проверяет все поля покупателя и возвращает объект с общей валидностью и ошибками.
+- `validate(): IValidationResult` - проверяет все поля данных покупателя и возвращает объект с ошибками (если они найдены) или пустой объект.
 
 ### Слой коммуникации
 
@@ -266,7 +261,7 @@ type TPayment = "card" | "cash";
 
 Поля класса:
 
-- `_api: IApi` - объект API-клиента для выполнения GET и POST запросов.
+- `api: IApi` - объект API-клиента для выполнения GET и POST запросов.
 
 Методы класса:
 

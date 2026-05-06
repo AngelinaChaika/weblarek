@@ -28,12 +28,12 @@ console.log('Массив товаров из каталога: ', catalog.getPr
 // - поиск товара по его id (успешно)
 console.log('Товар по ID найден: ', catalog.getProductById('b06cde61-912f-4663-9751-09956c0eed67'));
 // - поиск товара по его id (отсутствует)
-console.log('Товар по ID не найден): ', catalog.getProductById('aaa'));
+console.log('Товар по ID не найден: ', catalog.getProductById('aaa'));
 // - получение выбранного товара (успешно)
-console.log('Выбранный торар найден: ', catalog.getSelectedProduct());
+console.log('Выбранный товар найден: ', catalog.getSelectedProduct());
 // - получение выбранного товара (отсутствует)
 catalog.setSelectedProduct('')
-console.log('Выбранный торар отсутствует: ', catalog.getSelectedProduct());
+console.log('Выбранный товар отсутствует: ', catalog.getSelectedProduct());
 
 console.log('..................................')
 
@@ -82,21 +82,19 @@ buyer.setData({
 })
 // - получение данных покупателя
 console.log('Данные покупателя: ', buyer.getData());
-// - валидация поля (успешно)
-console.log('Валидация поля: ', buyer.validateField('payment', 'card'));
-// - валидация поля (ошибки)
-console.log('Ошибка валидации: ', buyer.validateField('payment', ''));
-console.log('Ошибка валидации: ', buyer.validateField('email', ''));
-console.log('Ошибка валидации: ', buyer.validateField('phone', ''));
-console.log('Ошибка валидации: ', buyer.validateField('address', ''));
 // - валидация покупателя (успешно)
-console.log('Валидация покупателя: ', buyer.validate());
+const errors1 = buyer.validate();
+console.log(Object.keys(errors1).length === 0 ? 'Валидация покупателя прошла успешно: ' : 'Выявлены ошибки валидации: ',
+  errors1);
 // - очистка данных покупателя
 buyer.clear();
-console.log('Данные покупателя отсутствуют: ', buyer.getData());
+console.log('Данные покупателя удалены: ', buyer.getData());
 // console.log('Данные покупателя: ', buyer.getData());
 // - валидация покупателя (ошибка)
-console.log('Валидация покупателя: ', buyer.validate());
+const errors2 = buyer.validate();
+console.log(Object.keys(errors2).length === 0 ? 'Валидация покупателя прошла успешно: ' : 'Выявлены ошибки валидации: ',
+  errors2);
+
 
 console.log('..................................')
 
@@ -107,13 +105,14 @@ console.log('..................................')
 
 // - GET запрос на сервер
 weblarekApi.getProducts()
-.then(res => {
-  console.log('GET запрос на сервер: ', res)
-  if('items' in res) {
-  catalog.setProducts(res.items)
-  console.log('Сохранение данных каталога в модели: ', catalog.getProducts())
-  }
-})
+  .then(res => {
+    console.log('GET запрос на сервер: ', res)
+    if('items' in res) {
+    catalog.setProducts(res.items)
+    console.log('Сохранение данных каталога в модели: ', catalog.getProducts())
+    }
+  })
+  .catch(err => console.log('Ошибка получения данных каталога:', err))
 
 // - оформление заказа: ответ сервера с подтверждением покупки
 buyer.setData({

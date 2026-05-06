@@ -1,30 +1,26 @@
 import { IProduct } from '../../types/index';
 
 export class CatalogModel {
-  private _products: IProduct[] = [];
-  private _selectedProduct: IProduct | null = null;
+  private products: IProduct[] = [];
+  private selectedProduct: IProduct | undefined = undefined;
 
   setProducts(products: IProduct[]): void {
-    this._products = products;
+    this.products = products;
   }
 
   getProducts(): IProduct[] {
-    return this._products;
+    return this.products;
   }
 
-  getProductById(id: string): IProduct | null {
-    const product = this._products.find(i => i.id === id);
-    if(product) {
-      return product;
-    }
-    return null;
-    }
+  getProductById(id: string): IProduct | undefined {
+    return this.products.find(i => i.id === id);
+  }
 
   setSelectedProduct(id: string): void {
-    this._selectedProduct = this.getProductById(id);
+    this.selectedProduct = this.getProductById(id);
   }
 
-  getSelectedProduct(): IProduct | null {
-    return this._selectedProduct;
+  getSelectedProduct(): IProduct | undefined {
+    return this.selectedProduct;
   }
 }
