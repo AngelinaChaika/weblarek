@@ -265,22 +265,10 @@ type TPayment = "card" | "cash";
 
 Методы класса:
 
-- `getProducts(): Promise<IProductListResponse>` - выполняет GET-запрос на эндпоинт `/product/` и возвращает объект со списком товаров, полученных с сервера, и их количеством.
-- `postOrder(order: IOrderRequest): Promise<IOrderResponse>` - выполняет POST-запрос на эндпоинт `/order/`, отправляет данные заказа и возвращает ответ сервера с подтверждением покупки или ошибкой.
+- `getProducts(): Promise<IProductListSuccessResponse>` - выполняет GET-запрос на эндпоинт `/product/` и возвращает объект со списком товаров, полученных с сервера, и их количеством.
+- `postOrder(order: IOrderSuccessResponse): Promise<IOrderResponse>` - выполняет POST-запрос на эндпоинт `/order/`, отправляет данные заказа и возвращает ответ сервера с подтверждением покупки.
 
 #### Типы и интерфейсы для работы с сервером
-
-##### Ответ со списком товаров
-
-```ts
-IProductListResponse = IProductListSuccessResponse | IErrorResponse;
-```
-
-Описание:
-
-- Тип ответа при запросе списка товаров.
-- При успешном запросе возвращается объект `IProductListSuccessResponse`
-- При ошибке возвращается объект `IErrorResponse`
 
 ##### Успешный ответ со списком товаров
 
@@ -297,18 +285,6 @@ interface IProductListSuccessResponse {
 - `total` - общее количество товаров
 - `items` - массив товаров `IProduct[]`
 
-##### Ответ при оформлении заказа
-
-```ts
-IOrderResponse = IOrderSuccessResponse | IErrorResponse;
-```
-
-Описание:
-
-- Тип ответа при отправке заказа.
-- При успешной отправке возвращается `IOrderSuccessResponse`
-- При ошибке - `IErrorResponse`
-
 ##### Успешный ответ заказа
 
 ```ts
@@ -323,19 +299,6 @@ interface IOrderSuccessResponse {
 - Подтверждение успешного оформления заказа.
 - `id` - идентификатор заказа
 - `total` - итоговая сумма заказа
-
-##### Ошибка
-
-```ts
-interface IErrorResponse {
-  error: string;
-}
-```
-
-Описание:
-
-- Объект, возвращаемый сервером при ошибке.
-- `error` - текст ошибки
 
 ##### Запрос на отправку заказа
 
