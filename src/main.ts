@@ -164,11 +164,3 @@ weblarekApi.postOrder(order2)
   .catch(err => {
     console.log('Ошибка при оформлении заказа: ', err)
   });
-
-
-
-
-
-
-
-
