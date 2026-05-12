@@ -26,7 +26,7 @@ export class BuyerModel {
   }
 
   validate(): IValidationResult {
-    const errors: Partial<Record<keyof IBuyer, string>> = {};
+    const errors: IValidationResult = {};
     if(this.buyerData.payment === null) {
       errors['payment'] = 'Не выбран вид оплаты'
     }
