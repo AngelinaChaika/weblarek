@@ -27,7 +27,7 @@ export class AppPresenter {
     private api: WebLarekApi,
 
     private catalogModel: CatalogModel,
-    private cartModel: BasketModel,
+    private basketModel: BasketModel,
     private buyerModel: BuyerModel,
 
     private header: Header,
@@ -147,7 +147,7 @@ export class AppPresenter {
   private renderSelectedProduct(product: IProduct): void {
     this.previewCard.buttonText = product.price === null
       ? "Недоступно"
-      : this.cartModel.hasItemById(product.id)
+      : this.basketModel.hasItemById(product.id)
       ? "Удалить из корзины"
       : "Купить";
     this.previewCard.buttonDisabled = product.price === null;
@@ -168,12 +168,13 @@ export class AppPresenter {
 
   private toggleBasketItem(product: IProduct): void {
     const item = product;
-    if(this.cartModel.hasItemById(item.id)) {
-      this.cartModel.removeItem(item.id);
+    if(this.basketModel.hasItemById(item.id)) {
+      this.basketModel.removeItem(item.id);
     } else {
-      this.cartModel.addItem(item);
+      this.basketModel.addItem(item);
     }
-    this.previewCard.buttonText = this.cartModel.hasItemById(item.id)
+    this.modal.close();
+    this.previewCard.buttonText = this.basketModel.hasItemById(item.id)
       ? "Удалить из корзины"
       : "Купить";
   }
@@ -209,7 +210,7 @@ export class AppPresenter {
   }
 
   private renderBasket(): void {
-    const basketItems = this.cartModel.getItems();
+    const basketItems = this.basketModel.getItems();
 
     this.basket.disabled = basketItems.length === 0;
 
@@ -223,7 +224,10 @@ export class AppPresenter {
   }
 
   private deleteBasketItem(id: string):void {
-    this.cartModel.removeItem(id);
+    this.basketModel.removeItem(id);
+    if(this.basketModel.getTotalCount() === 0) {
+      this.basket.disabled = true;
+    }
   }
 
   private closeModal(): void {
@@ -275,8 +279,8 @@ export class AppPresenter {
   private postOrder(): void {
     this.api.postOrder({
       ...this.buyerModel.getData(),
-      total: this.cartModel.getTotalPrice(),
-      items: this.cartModel.getItems().map((item) => item.id)
+      total: this.basketModel.getTotalPrice(),
+      items: this.basketModel.getItems().map((item) => item.id)
     })
       .then(res => {
         if('total' in res) {
@@ -287,7 +291,7 @@ export class AppPresenter {
   }
 
   private renderSuccess() {
-    this.cartModel.clear();
+    this.basketModel.clear();
     this.buyerModel.clear();
     this.orderForm.clearForm();
     this.contactsForm.clearForm();
