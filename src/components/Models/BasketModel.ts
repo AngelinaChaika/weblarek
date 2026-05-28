@@ -1,7 +1,18 @@
+import { EventEmitter } from '../base/Events';
 import { IProduct } from '../../types/index';
 
-export class CartModel {
+export class BasketModel {
   private products: IProduct[] = [];
+
+  constructor(private events: EventEmitter) {}
+
+  private emitChanges(): void {
+    this.events.emit('basket:changed', {
+      items: this.getItems(),
+      total: this.getTotalPrice(),
+      count: this.getTotalCount()
+    });
+  }
 
   getItems(): IProduct[] {
     return [...this.products];
@@ -10,15 +21,22 @@ export class CartModel {
   addItem(item: IProduct): void {
     if(!this.hasItemById(item.id)) {
       this.products.push(item);
+      this.emitChanges();
     }
   }
 
   removeItem(id: string): void {
-    this.products = this.products.filter(i => i.id !== id);
+    if(this.hasItemById(id)) {
+      this.products = this.products.filter(i => i.id !== id);
+      this.emitChanges();
+    }
   }
 
   clear(): void {
-    this.products = [];
+    if (this.products.length > 0) {
+      this.products = [];
+      this.emitChanges();
+    }
   }
 
   getTotalPrice(): number {

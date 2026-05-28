@@ -1,4 +1,5 @@
-import { IBuyer, IValidationResult } from '../../types/index';
+import { EventEmitter } from '../base/Events';
+import { IBuyer, TValidationResult } from '../../types/index';
 
 export class BuyerModel {
   private buyerData: IBuyer = {
@@ -6,10 +7,21 @@ export class BuyerModel {
     email: "",
     phone: "",
     address: ""
+  };
+
+  constructor(private events: EventEmitter) {}
+
+  private emitChanges(): void {
+    this.events.emit('buyer:changed', {
+      buyer: this.getData(),
+      orderErrors: this.validateOrderData(),
+      contactsErrors: this.validateContactsData()
+    });
   }
 
   setData(data: Partial<IBuyer>): void {
     this.buyerData = {...this.buyerData, ...data};
+    this.emitChanges();
   }
 
   getData(): IBuyer {
@@ -23,21 +35,28 @@ export class BuyerModel {
       phone: "",
       address: ""
     };
+
+    this.emitChanges();
   }
 
-  validate(): IValidationResult {
-    const errors: IValidationResult = {};
+  validateOrderData(): TValidationResult {
+    const errors: TValidationResult = {};
     if(this.buyerData.payment === null) {
-      errors['payment'] = 'Не выбран вид оплаты'
-    }
-    if(this.buyerData.email.trim() === "") {
-      errors['email'] = 'Укажите емэйл'
-    }
-    if(this.buyerData.phone.trim() === "") {
-      errors['phone'] = 'Укажите номер телефона'
+      errors['payment'] = 'Не выбран вид оплаты';
     }
     if(this.buyerData.address.trim() === "") {
-      errors['address'] = 'Укажите адрес доставки'
+      errors['address'] = 'Укажите адрес доставки';
+    }
+    return errors;
+  }
+
+  validateContactsData(): TValidationResult {
+    const errors: TValidationResult = {};
+    if(this.buyerData.email.trim() === "") {
+      errors['email'] = 'Укажите емэйл';
+    }
+    if(this.buyerData.phone.trim() === "") {
+      errors['phone'] = 'Укажите номер телефона';
     }
     return errors;
   }

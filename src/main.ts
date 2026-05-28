@@ -1,166 +1,142 @@
-import { CatalogModel } from './components/Models/CatalogModel';
-import { BuyerModel } from './components/Models/BuyerModel';
-import { CartModel } from './components/Models/CartModel';
-import { WebLarekApi } from './components/Models/WebLarekApi';
-import { API_URL } from './utils/constants'
-import { Api } from './components/base/Api';
-import { apiProducts } from './utils/data'
 import './scss/styles.scss';
 
-const cart = new CartModel;
-const buyer = new BuyerModel;
-const catalog = new CatalogModel;
+import { EventEmitter } from './components/base/Events';
+import { CatalogModel } from './components/Models/CatalogModel';
+import { BuyerModel } from './components/Models/BuyerModel';
+import { BasketModel } from './components/Models/BasketModel';
+import { API_URL } from './utils/constants';
+import { Api } from './components/base/Api';
+import { WebLarekApi } from './components/Models/WebLarekApi';
+
+import { Header } from './components/View/Header';
+import { Catalog } from './components/View/Catalog';
+import { Modal } from './components/View/Modal';
+import { Basket } from './components/View/Basket';
+import { PreviewCard } from './components/View/PreviewCard';
+import { OrderForm } from './components/View/OrderForm';
+import { ContactsForm } from './components/View/ContactsForm';
+import { Success } from './components/View/Success';
+
+import { AppPresenter } from './components/Presenter/AppPresenter';
+
+const events = new EventEmitter();
+
+const catalogModel = new CatalogModel(events);
+const buyerModel = new BuyerModel(events);
+const basketModel = new BasketModel(events);
 const api = new Api(API_URL);
 const weblarekApi = new WebLarekApi(api);
 
-// ТЕСТЫ
+// СОЗДАНИЕ HEADER
+const headerContainer = document.querySelector('.header') as HTMLElement;
+const header = new Header(headerContainer, {
+  onClick: () => {
+    events.emit('basket:open');
+  }
+});
 
-// Класс CatalogModel
-console.log(('Класс CatalogModel').toUpperCase())
-console.log('..................................')
+// СОЗДАНИЕ CATALOG
+const catalogContainer = document.querySelector('.gallery') as HTMLElement;
+const catalog = new Catalog(catalogContainer);
 
-// - сохранение переданного массива товаров
-catalog.setProducts(apiProducts.items);
-// - сохранение товара по id как выбранного
-catalog.setSelectedProduct('b06cde61-912f-4663-9751-09956c0eed67');
-// - получение массива всех товаров
-console.log('Массив товаров из каталога: ', catalog.getProducts());
-// - поиск товара по его id (успешно)
-console.log('Товар по ID найден: ', catalog.getProductById('b06cde61-912f-4663-9751-09956c0eed67'));
-// - поиск товара по его id (отсутствует)
-console.log('Товар по ID не найден: ', catalog.getProductById('aaa'));
-// - получение выбранного товара (успешно)
-console.log('Выбранный товар найден: ', catalog.getSelectedProduct());
-// - получение выбранного товара (отсутствует)
-catalog.setSelectedProduct('')
-console.log('Выбранный товар отсутствует: ', catalog.getSelectedProduct());
+// СОЗДАНИЕ MODAL
+const modalContainer = document.querySelector('.modal') as HTMLElement;
+const modal = new Modal(modalContainer, {
+  onClose: () => {
+    events.emit('modal:close')
+  }
+});
 
-console.log('..................................')
+// СОЗДАНИЕ BASKET
+const basketTemplate = document.querySelector<HTMLTemplateElement>('#basket')!;
+const basketContainer = basketTemplate.content.querySelector('.basket')!.cloneNode(true) as HTMLElement;
+const basket = new Basket(basketContainer, {
+  onOrder: () => {
+    events.emit('order:open')
+  }
+});
 
-// Класс CartModel
-console.log(('Класс CartModel').toUpperCase())
-console.log('..................................')
+// СОЗДАНИЕ CARDS TEMPLATES
+const catalogCardTemplate = document.querySelector('#card-catalog') as HTMLTemplateElement;
 
-// добавление товаров в массив корзины
-const product1 = catalog.getProductById('854cef69-976d-4c2a-a18c-2aa45046c390');
-const product2 = catalog.getProductById('c101ab44-ed99-4a54-990d-47aa2bb4e7d9');
-if(product1) {
-  cart.addItem(product1)
-};
-if(product2) {
-  cart.addItem(product2)
-};
-// - получение массива товаров, которые находятся в корзине
-console.log('Товары в корзине: ', cart.getItems());
-// - получение стоимости всех товаров в корзине
-console.log('Общая стоимость: ', cart.getTotalPrice());
-// - получение количества товаров в корзине
-console.log('Общее количество товаров: ', cart.getTotalCount());
-// - проверка наличия товара в корзине по его id (успешно)
-console.log('Товар есть в корзине: ', cart.hasItemById('854cef69-976d-4c2a-a18c-2aa45046c390'));
-// - проверка наличия товара в корзине по его id (отсутствует)
-console.log('Товар отсутствует в корзине: ', cart.hasItemById('b06cde61-912f-4663-9751-09956c0eed67'));
-// - удаление товара из корзины
-cart.removeItem('854cef69-976d-4c2a-a18c-2aa45046c390');
-console.log('Товар "+1 час в сутках" удален из корзины: ', cart.getItems());
-// - очистка корзины
-cart.clear();
-console.log('Корзина пуста: ', cart.getItems());
-
-console.log('..................................')
-
-// Класс BuyerModel
-console.log(('Класс BuyerModel').toUpperCase())
-console.log('..................................')
-
-// - обновление данных покупателя
-buyer.setData({
-  payment: 'cash',
-  email: "pete@gmail.com",
-  phone: "+17035456700",
-  address: "1400 Defense Pentagon, Washington, DC 20301, USA"
+const previewCardTemplate = document.querySelector('#card-preview') as HTMLTemplateElement;
+const previewCardContainer = previewCardTemplate.content
+      .querySelector('.card')!
+      .cloneNode(true) as HTMLElement;
+const previewCard = new PreviewCard(previewCardContainer, {
+  onToggleBasket: () => {
+    events.emit('product:toggle', { product: catalogModel.getSelectedProduct() });
+  }
 })
-// - получение данных покупателя
-console.log('Данные покупателя: ', buyer.getData());
-// - валидация покупателя (успешно)
-const errors1 = buyer.validate();
-console.log(Object.keys(errors1).length === 0 ? 'Валидация покупателя прошла успешно: ' : 'Выявлены ошибки валидации: ',
-  errors1);
-// - очистка данных покупателя
-buyer.clear();
-console.log('Данные покупателя удалены: ', buyer.getData());
-// console.log('Данные покупателя: ', buyer.getData());
-// - валидация покупателя (ошибка)
-const errors2 = buyer.validate();
-console.log(Object.keys(errors2).length === 0 ? 'Валидация покупателя прошла успешно: ' : 'Выявлены ошибки валидации: ',
-  errors2);
+const basketCardTemplate = document.querySelector('#card-basket') as HTMLTemplateElement;
 
+// СОЗДАНИЕ ORDER FORM
+const orderFormTemplate = document.querySelector('#order') as HTMLTemplateElement;
 
-console.log('..................................')
+const orderFormContainer = orderFormTemplate.content
+      .querySelector('form[name="order"]')!
+      .cloneNode(true) as HTMLFormElement;
 
-// Класс WebLarekApi
+const orderForm = new OrderForm(orderFormContainer, {
+  onInput: (field, value) => {
+    events.emit('order:input', { field, value })
+  },
+  onPaymentSelect: (payment) => {
+    events.emit('order.payment:select', { payment })
+  },
+  onSubmit: () => {
+    events.emit('order:submit')
+  }
+});
 
-console.log(('Класс WebLarekApi').toUpperCase())
-console.log('..................................')
+// СОЗДАНИЕ CONTACTS FORM
+const contactsFormTemplate = document.querySelector('#contacts') as HTMLTemplateElement;
 
-// - GET запрос на сервер
-weblarekApi.getProducts()
-  .then(res => {
-    console.log('GET запрос на сервер: ', res)
-    if('items' in res) {
-    catalog.setProducts(res.items)
-    console.log('Сохранение данных каталога в модели: ', catalog.getProducts())
-    }
-  })
-  .catch(err => console.log('Ошибка получения данных каталога:', err))
+const contactsFormContainer = contactsFormTemplate.content
+      .querySelector('form[name="contacts"]')!
+      .cloneNode(true) as HTMLFormElement;
 
-// - оформление заказа: ответ сервера с подтверждением покупки
-buyer.setData({
-  payment: 'cash',
-  email: "pete@gmail.com",
-  phone: "+17035456700",
-  address: "1400 Defense Pentagon, Washington, DC 20301, USA"
-})
+const contactsForm = new ContactsForm(contactsFormContainer, {
+  onInput: (field, value) => {
+    events.emit('contacts:input', { field, value })
+  },
+  onSubmit: () => {
+    events.emit('contacts:submit')
+  }
+});
 
-if(product1) {
-  cart.addItem(product1)
-};
-if(product2) {
-  cart.addItem(product2)
-};
+// СОЗДАНИЕ SUCCESS
+const successTemplate = document.querySelector('#success') as HTMLTemplateElement;
 
-function getItemIds(): string[] {
-  const products = cart.getItems();
-  const ids = products.map(i => i.id);
-  return ids;
-}
+const successContainer = successTemplate.content
+      .querySelector('.order-success')!
+      .cloneNode(true) as HTMLElement;
 
-const order1 = {
-  ...buyer.getData(),
-  total: cart.getTotalPrice(),
-  items: getItemIds()
-};
+const success = new Success(successContainer, {
+  onClose: () => {
+    events.emit('modal:close')
+  }
+});
 
-weblarekApi.postOrder(order1)
-  .then(res => {
-    console.log('Заказ оформлен: ', res)
-  })
-  .catch(err => {
-    console.log('Ошибка при оформлении заказа: ', err)
-  });
+const presenter = new AppPresenter(
+  events,
 
-// - оформление заказа: ответ сервера с ошибкой
-buyer.clear();
+  weblarekApi,
 
-const order2 = {
-  ...order1,
-  ...buyer.getData()
-};
+  catalogModel,
+  basketModel,
+  buyerModel,
 
-weblarekApi.postOrder(order2)
-  .then(res => {
-    console.log('Заказ оформлен: ', res)
-  })
-  .catch(err => {
-    console.log('Ошибка при оформлении заказа: ', err)
-  });
+  header,
+  catalog,
+  modal,
+  basket,
+  catalogCardTemplate,
+  basketCardTemplate,
+  previewCard,
+  orderForm,
+  contactsForm,
+  success
+);
+
+presenter.init();

@@ -1,11 +1,16 @@
+import { EventEmitter } from '../base/Events';
 import { IProduct } from '../../types/index';
-
 export class CatalogModel {
   private products: IProduct[] = [];
   private selectedProduct: IProduct | undefined = undefined;
 
+  constructor(private events: EventEmitter) {}
+
   setProducts(products: IProduct[]): void {
     this.products = products;
+    this.events.emit('catalog:changed', {
+      products: this.products
+    });
   }
 
   getProducts(): IProduct[] {
@@ -17,7 +22,14 @@ export class CatalogModel {
   }
 
   setSelectedProduct(id: string): void {
-    this.selectedProduct = this.getProductById(id);
+    const product = this.getProductById(id);
+
+    if (!product) return;
+
+    this.selectedProduct = product;
+    this.events.emit('product:selected', {
+      product: this.selectedProduct
+    });
   }
 
   getSelectedProduct(): IProduct | undefined {
