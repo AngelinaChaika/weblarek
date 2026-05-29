@@ -1,7 +1,7 @@
 import { EventEmitter } from '../base/Events';
-import { IBuyer, TValidationResult } from '../../types/index';
+import { IBuyerModel, IBuyer, TValidationResult } from '../../types/index';
 
-export class BuyerModel {
+export class BuyerModel implements IBuyerModel {
   private buyerData: IBuyer = {
     payment: null,
     email: "",
@@ -14,8 +14,7 @@ export class BuyerModel {
   private emitChanges(): void {
     this.events.emit('buyer:changed', {
       buyer: this.getData(),
-      orderErrors: this.validateOrderData(),
-      contactsErrors: this.validateContactsData()
+      errors: this.validate()
     });
   }
 
@@ -39,7 +38,7 @@ export class BuyerModel {
     this.emitChanges();
   }
 
-  validateOrderData(): TValidationResult {
+  validate(): TValidationResult {
     const errors: TValidationResult = {};
     if(this.buyerData.payment === null) {
       errors['payment'] = 'Не выбран вид оплаты';
@@ -47,11 +46,6 @@ export class BuyerModel {
     if(this.buyerData.address.trim() === "") {
       errors['address'] = 'Укажите адрес доставки';
     }
-    return errors;
-  }
-
-  validateContactsData(): TValidationResult {
-    const errors: TValidationResult = {};
     if(this.buyerData.email.trim() === "") {
       errors['email'] = 'Укажите емэйл';
     }

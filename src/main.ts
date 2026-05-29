@@ -4,20 +4,23 @@ import { EventEmitter } from './components/base/Events';
 import { CatalogModel } from './components/Models/CatalogModel';
 import { BuyerModel } from './components/Models/BuyerModel';
 import { BasketModel } from './components/Models/BasketModel';
-import { API_URL } from './utils/constants';
+import { API_URL, CDN_URL } from './utils/constants';
 import { Api } from './components/base/Api';
 import { WebLarekApi } from './components/Models/WebLarekApi';
 
 import { Header } from './components/View/Header';
 import { Catalog } from './components/View/Catalog';
+import { CatalogCard } from './components/View/CatalogCard';
 import { Modal } from './components/View/Modal';
 import { Basket } from './components/View/Basket';
 import { PreviewCard } from './components/View/PreviewCard';
+import { BasketCard } from './components/View/BasketCard'
 import { OrderForm } from './components/View/OrderForm';
 import { ContactsForm } from './components/View/ContactsForm';
 import { Success } from './components/View/Success';
 
 import { AppPresenter } from './components/Presenter/AppPresenter';
+import { IProduct } from './types';
 
 const events = new EventEmitter();
 
@@ -59,6 +62,19 @@ const basket = new Basket(basketContainer, {
 // СОЗДАНИЕ CARDS TEMPLATES
 const catalogCardTemplate = document.querySelector('#card-catalog') as HTMLTemplateElement;
 
+const createCatalogCard = (product: IProduct, onClick: () => void) => {
+  const cardContainer = catalogCardTemplate.content
+        .querySelector('.card')!
+        .cloneNode(true) as HTMLButtonElement;
+
+  const card = new CatalogCard(cardContainer, { onClick });
+
+  return card.render({
+    ...product,
+    image: CDN_URL + product.image.replace('svg', 'png')
+  });
+};
+
 const previewCardTemplate = document.querySelector('#card-preview') as HTMLTemplateElement;
 const previewCardContainer = previewCardTemplate.content
       .querySelector('.card')!
@@ -67,8 +83,24 @@ const previewCard = new PreviewCard(previewCardContainer, {
   onToggleBasket: () => {
     events.emit('product:toggle', { product: catalogModel.getSelectedProduct() });
   }
-})
+});
+
 const basketCardTemplate = document.querySelector('#card-basket') as HTMLTemplateElement;
+
+const createBasketCard = (product: IProduct, index: number, onDelete: () => void) => {
+  const basketCardContainer = basketCardTemplate.content
+      .querySelector('.card')!
+      .cloneNode(true) as HTMLElement;
+
+  const card = new BasketCard(basketCardContainer, { onDelete });
+
+  card.index = index;
+
+  return card.render({
+    ...product
+  });
+}
+
 
 // СОЗДАНИЕ ORDER FORM
 const orderFormTemplate = document.querySelector('#order') as HTMLTemplateElement;
@@ -131,8 +163,8 @@ const presenter = new AppPresenter(
   catalog,
   modal,
   basket,
-  catalogCardTemplate,
-  basketCardTemplate,
+  createCatalogCard,
+  createBasketCard,
   previewCard,
   orderForm,
   contactsForm,

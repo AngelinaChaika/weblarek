@@ -35,10 +35,4 @@ export class OrderForm extends Form<IOrderForm> {
   set address (value: string) {
     this.addressInput.value = value;
   }
-
-  clearForm(): void {
-    this.cashButton.classList.remove('button_alt-active');
-    this.cardButton.classList.remove('button_alt-active');
-    this.address = "";
-  }
 }

@@ -1,6 +1,6 @@
 import { EventEmitter } from '../base/Events';
-import { IProduct } from '../../types/index';
-export class CatalogModel {
+import { ICatalogModel, IProduct } from '../../types/index';
+export class CatalogModel implements ICatalogModel {
   private products: IProduct[] = [];
   private selectedProduct: IProduct | undefined = undefined;
 

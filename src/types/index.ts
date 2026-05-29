@@ -39,6 +39,40 @@ export interface IBuyer {
 
 export type TValidationResult = Partial<Record<keyof IBuyer, string>>;
 
+export interface ICatalogModel {
+  setProducts(products: IProduct[]): void;
+  getProducts(): IProduct[];
+  getProductById(id: string): IProduct | undefined;
+  setSelectedProduct(id: string): void;
+  getSelectedProduct(): IProduct | undefined;
+}
+
+export interface IBasketModel {
+  getItems(): IProduct[];
+  addItem(item: IProduct): void;
+  removeItem(id: string): void;
+  clear(): void;
+  getTotalPrice(): number;
+  getTotalCount(): number;
+  hasItemById(id: string): boolean;
+}
+
+export interface IBuyerModel {
+  setData(data: Partial<IBuyer>): void;
+  getData(): IBuyer;
+  clear(): void;
+  validate(): TValidationResult;
+}
+
+export interface IWebLarekApi {
+  getProducts(): Promise<IProductListSuccessResponse>;
+  postOrder(order: TOrderRequest): Promise<IOrderSuccessResponse>;
+}
+
+export interface IComponent<T> {
+  render(data?: Partial<T>): HTMLElement;
+}
+
 export interface IOnClickAction {
   onClick: () => void;
 }
@@ -68,19 +102,21 @@ export interface IOrderFormActions extends IFormActions {
   onPaymentSelect: (payment: TPayment) => void;
 }
 
-export interface IHeader {
+export interface IHeader extends IComponent<IHeader> {
   counter: number;
 }
 
-export interface ICatalog {
+export interface ICatalog extends IComponent<ICatalog> {
   catalog: HTMLElement[];
 }
 
-export interface IModal {
+export interface IModal extends IComponent<IModal> {
   content: HTMLElement;
+  open(): void;
+  close(): void;
 }
 
-export interface IBasket {
+export interface IBasket extends IComponent<IBasket> {
   productList: HTMLElement[];
   totalPrice: number;
   disabled: boolean;
@@ -102,34 +138,32 @@ export interface IBasketCard extends ICard {
   value: number;
 }
 
-export interface IPreviewCard extends ICard {
+export interface IPreviewCard extends IComponent<IPreviewCard> {
   category: TCategory;
   image: string;
   description: string;
-  inBasket: boolean;
   buttonText: string;
   buttonDisabled: boolean
 }
 
 export type TFormErrors<T> = Partial<Record<keyof T, string>>;
 
-export interface IForm<T> {
+export interface IForm<T> extends IComponent<IForm<T>> {
   valid: boolean;
   errors: TFormErrors<T>;
-  clearForm(): void;
 }
 
-export interface IOrderForm {
+export interface IOrderForm extends IForm<IOrderForm> {
   payment: TPayment | null;
   address: string;
 }
 
-export interface IContactsForm {
+export interface IContactsForm extends IForm<IContactsForm> {
   email: string;
   phone: string;
 }
 
-export interface ISuccess {
+export interface ISuccess extends IComponent<ISuccess> {
   totalPrice: number;
 }
 

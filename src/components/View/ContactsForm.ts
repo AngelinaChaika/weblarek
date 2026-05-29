@@ -19,9 +19,4 @@ export class ContactsForm extends Form<IContactsForm> {
   set phone (value: string) {
     this.phoneInput.value = value;
   }
-
-  clearForm() {
-    this.email = "";
-    this.phone = "";
-  }
 }

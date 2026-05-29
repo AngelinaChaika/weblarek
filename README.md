@@ -181,6 +181,20 @@ type TPayment = "card" | "cash";
 
 ### Модели данных
 
+#### Интерфейс ICatalogModel
+
+Описывает модель каталога товаров. Отвечает за хранение списка товаров, поиск товара по идентификатору и управление выбранным товаром.
+
+```ts
+interface ICatalogModel {
+  setProducts(products: IProduct[]): void;
+  getProducts(): IProduct[];
+  getProductById(id: string): IProduct | undefined;
+  setSelectedProduct(id: string): void;
+  getSelectedProduct(): IProduct | undefined;
+}
+```
+
 #### Класс CatalogModel
 
 Класс отвечает за хранение и управление данных каталога товаров.
@@ -208,6 +222,22 @@ type TPayment = "card" | "cash";
 События:
 
 - при вызове методов `setProducts` и `setSelectedProduct` вызывает `catalog:changed`.
+
+#### Интерфейс IBasketModel
+
+Описывает модель корзины. Отвечает за хранение выбранных товаров, управление содержимым корзины и расчёт итоговых значений.
+
+```ts
+interface IBasketModel {
+  getItems(): IProduct[];
+  addItem(item: IProduct): void;
+  removeItem(id: string): void;
+  clear(): void;
+  getTotalPrice(): number;
+  getTotalCount(): number;
+  hasItemById(id: string): boolean;
+}
+```
 
 #### Класс BasketModel
 
@@ -238,6 +268,19 @@ type TPayment = "card" | "cash";
 
 - при вызове метода `emitChanges` вызывает `basket:changed`.
 
+#### Интерфейс IBuyerModel
+
+Описывает модель покупателя. Отвечает за хранение данных пользователя, используемых при оформлении заказа, а также за их валидацию.
+
+```ts
+interface IBuyerModel {
+  setData(data: Partial<IBuyer>): void;
+  getData(): IBuyer;
+  clear(): void;
+  validate(): TValidationResult;
+}
+```
+
 #### Класс BuyerModel
 
 Класс отвечает за хранение и управление данными покупателя.
@@ -259,14 +302,24 @@ type TPayment = "card" | "cash";
 - `setData(data: Partial<IBuyer>): void` - обновляет данные покупателя. Метод принимает объект с любыми полями интерфейса `IBuyer` и обновляет только переданные значения, не затрагивая остальные.
 - `getData(): IBuyer` - получение всех данных покупателя.
 - `clear(): void` - очищает данные покупателя и ошибки валидации.
-- `validateOrderData(): TValidationResult` - проверяет поля адресса и кнопки выбора способа оплаты и возвращает объект с ошибками (если они найдены) или пустой объект.
-- `validateContactsData(): TValidationResult` - проверяет поля email и телефона и возвращает объект с ошибками (если они найдены) или пустой объект.
+- `validate(): TValidationResult` - проверяет поля информации о покупателе и возвращает объект с ошибками (если они найдены) или пустой объект.
 
 События:
 
 - при вызове метода `emitChanges` вызывает `buyer:changed`.
 
 ### Слой коммуникации
+
+#### Интерфейс IWebLarekApi
+
+Описывает API-слой приложения. Отвечает за взаимодействие с сервером: получение каталога товаров и отправку заказов.
+
+```ts
+interface IWebLarekApi {
+  getProducts(): Promise<IProductListSuccessResponse>;
+  postOrder(order: TOrderRequest): Promise<IOrderSuccessResponse>;
+}
+```
 
 #### Класс WebLarekApi
 
@@ -359,6 +412,16 @@ interface IOnCloseAction {
 }
 ```
 
+#### Интерфейс IComponent<T>
+
+Базовый интерфейс для всех компонентов представления (View). Определяет общий контракт рендеринга данных в DOM.
+
+```ts
+interface IComponent<T> {
+  render(data?: Partial<T>): HTMLElement;
+}
+```
+
 #### Интерфейс IHeader
 
 Интерфейс для передачи данных в рендер класса `Header`.
@@ -432,6 +495,8 @@ interface ICatalog {
 ```ts
 interface IModal {
   content: HTMLElement;
+  open(): void;
+  close(): void;
 }
 ```
 
@@ -799,7 +864,6 @@ interface IOrderFormActions extends IFormActions {
 
 - `set payment (value: TPayment | null)` - устанавливает выбранный тип оплаты.
 - `set address (value: string)` - устанавливает адрес доставки.
-- `clearForm(): void` - очищает поля и кнопки формы.
 
 События:
 
@@ -837,7 +901,6 @@ interface IContactsForm {
 
 - `set email (value: string)` - устанавливает email.
 - `set phone (value: string)` - устанавливает номер телефона.
-- `clearForm(): void` - очищает поля и кнопки формы.
 
 #### Интерфейс ISuccess
 
@@ -985,11 +1048,10 @@ interface ISuccess {
 
 Конструктор принимает параметры:
 
-- экземпляр EventEmitter;
-- API-класс для работы с сервером;
-- модели данных (CatalogModel, CartModel, BuyerModel);
-- View-компоненты (Header, Catalog, Modal, Basket, Success, формы и карточки);
-- HTML-шаблоны карточек.
+- интерфейс IEvents;
+- интерфейс IWebLarekApi для работы с сервером;
+- интерфейсы моделей данных (ICatalogModel, IBasketModel, IBuyerModel);
+- интерфейсы View-компонентов (IHeader, ICatalog, IModal, IBasket, ISuccess, форм и карточек).
 
 ##### Методы класса
 
@@ -1010,8 +1072,6 @@ interface ISuccess {
 - `createBasketCards(items)` - создает карточки товаров, добавленных в корзину.
 
 - `emitBasketChanges(items, total, count)` - обновляет данные корзины.
-
-- `renderBasket()` - создает и отображает корзину.
 
 - `deleteBasketItem(id)` - удаляет товар из корзины.
 

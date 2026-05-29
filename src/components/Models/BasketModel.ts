@@ -1,7 +1,7 @@
 import { EventEmitter } from '../base/Events';
-import { IProduct } from '../../types/index';
+import { IBasketModel, IProduct } from '../../types/index';
 
-export class BasketModel {
+export class BasketModel implements IBasketModel {
   private products: IProduct[] = [];
 
   constructor(private events: EventEmitter) {}

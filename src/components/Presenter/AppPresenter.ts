@@ -1,45 +1,53 @@
-import { EventEmitter } from '../base/Events';
+import { IEvents } from '../base/Events';
 
 import { CDN_URL } from '../../utils/constants';
-import { WebLarekApi } from '../Models/WebLarekApi';
-import { CatalogModel } from '../Models/CatalogModel';
-import { BasketModel } from '../Models/BasketModel';
-import { BuyerModel } from '../Models/BuyerModel';
 
-import { Header } from '../View/Header';
-import { Catalog } from '../View/Catalog';
-import { Modal } from '../View/Modal';
-import { Basket } from '../View/Basket';
-import { CatalogCard } from '../View/CatalogCard';
-import { BasketCard } from '../View/BasketCard';
-import { PreviewCard } from '../View/PreviewCard';
-import { OrderForm } from '../View/OrderForm';
-import { ContactsForm } from '../View/ContactsForm';
-import { Success } from '../View/Success';
-
-import { IProduct, TPayment } from '../../types/index';
+import {
+  ICatalogModel,
+  IBasketModel,
+  IBuyerModel,
+  IWebLarekApi,
+  IHeader,
+  ICatalog,
+  IModal,
+  IBasket,
+  IPreviewCard,
+  IOrderForm,
+  IContactsForm,
+  ISuccess,
+  IProduct,
+  TPayment,
+  TValidationResult
+  } from '../../types/index';
 
 
 export class AppPresenter {
   constructor(
-    private events: EventEmitter,
+    private events: IEvents,
 
-    private api: WebLarekApi,
+    private api: IWebLarekApi,
 
-    private catalogModel: CatalogModel,
-    private basketModel: BasketModel,
-    private buyerModel: BuyerModel,
+    private catalogModel: ICatalogModel,
+    private basketModel: IBasketModel,
+    private buyerModel: IBuyerModel,
 
-    private header: Header,
-    private catalog: Catalog,
-    private modal: Modal,
-    private basket: Basket,
-    private catalogCardTemplate: HTMLTemplateElement,
-    private basketCardTemplate: HTMLTemplateElement,
-    private previewCard: PreviewCard,
-    private orderForm: OrderForm,
-    private contactsForm: ContactsForm,
-    private success: Success
+    private header: IHeader,
+    private catalog: ICatalog,
+    private modal: IModal,
+    private basket: IBasket,
+    private createCatalogCard: (
+      product: IProduct,
+      onClick: () => void
+    ) => HTMLElement,
+    private createBasketCard: (
+      product: IProduct,
+      index: number,
+      onClick: () => void
+    ) => HTMLElement,
+    private previewCard: IPreviewCard,
+    private orderForm: IOrderForm,
+    private contactsForm: IContactsForm,
+    private success: ISuccess
   ) {}
 
   init() {
@@ -73,7 +81,10 @@ export class AppPresenter {
       });
 
     this.events.on('basket:open', () => {
-      this.renderBasket();
+      this.modal.render({
+        content: this.basket.render()
+      });
+      this.modal.open();
     });
 
     this.events.on<{ id: string }>('basket:item-delete', (data) => {
@@ -89,6 +100,14 @@ export class AppPresenter {
     });
 
     this.events.on('buyer:changed', () => {
+      const buyer = this.buyerModel.getData();
+
+      this.orderForm.address = buyer.address;
+      this.orderForm.payment = buyer.payment;
+
+      this.contactsForm.email = buyer.email;
+      this.contactsForm.phone = buyer.phone;
+
       this.renderFormErrors();
     });
 
@@ -126,19 +145,11 @@ export class AppPresenter {
 
   private renderCatalog(products: IProduct[]): void {
     const cards = products.map((product) => {
-      const cardContainer = this.catalogCardTemplate.content
-            .querySelector('.card')!
-            .cloneNode(true) as HTMLButtonElement;
-      const card = new CatalogCard(cardContainer, {
-        onClick: () => {
-          this.events.emit('product:open', { id: product.id });
-        }
-      })
-      return card.render({
-        ...product,
-        image: CDN_URL + product.image.replace('svg', 'png')
+      return this.createCatalogCard(product, () => {
+        this.events.emit('product:open', { id: product.id });
       });
-    })
+    });
+
     this.catalog.render({
       catalog: cards
     });
@@ -180,26 +191,18 @@ export class AppPresenter {
   }
 
   private createBasketCards(items: IProduct[]): HTMLElement[] {
-  return items.map((product, index) => {
-    const basketCardContainer = this.basketCardTemplate.content
-      .querySelector('.card')!
-      .cloneNode(true) as HTMLElement;
-
-    const card = new BasketCard(basketCardContainer, {
-      onDelete: () => {
-        this.events.emit('basket:item-delete', { id: product.id });
-      }
+    return items.map((product, index) => {
+      return this.createBasketCard(product, index + 1, () => {
+          this.events.emit('basket:item-delete', { id: product.id });
+        })
     });
-
-    card.index = index + 1;
-
-    return card.render({
-      ...product
-    });
-  });
-}
+  }
 
   private emitBasketChanges(items: IProduct[], total: number, count: number): void {
+    const basketItems = this.basketModel.getItems();
+
+    this.basket.disabled = basketItems.length === 0;
+
     this.header.counter = count;
 
     this.basket.totalPrice = total;
@@ -209,25 +212,8 @@ export class AppPresenter {
     });
   }
 
-  private renderBasket(): void {
-    const basketItems = this.basketModel.getItems();
-
-    this.basket.disabled = basketItems.length === 0;
-
-    this.modal.render({
-      content: this.basket.render({
-        productList: this.createBasketCards(basketItems)
-      })
-    });
-
-    this.modal.open();
-  }
-
   private deleteBasketItem(id: string):void {
     this.basketModel.removeItem(id);
-    if(this.basketModel.getTotalCount() === 0) {
-      this.basket.disabled = true;
-    }
   }
 
   private closeModal(): void {
@@ -238,27 +224,44 @@ export class AppPresenter {
     this.modal.render({
       content: this.orderForm.render()
     });
-    this.renderFormErrors();
   }
 
   private renderFormErrors(): void {
-    const orderErrors = this.buyerModel.validateOrderData();
-    this.orderForm.errors = orderErrors;
+    const errors = this.buyerModel.validate();
+
+    const orderErrors: TValidationResult = {};
+    if(errors.address) {
+      orderErrors.address = errors.address;
+    };
+    if(errors.payment) {
+      orderErrors.payment = errors.payment;
+    };
+
+    const contactsErrors: TValidationResult = {};
+    if(errors.email) {
+      contactsErrors.email = errors.email;
+    };
+    if(errors.phone) {
+      contactsErrors.phone = errors.phone;
+    };
+
+    if(Object.keys(orderErrors).length >= 0) {
+      this.orderForm.errors = orderErrors;
+    };
     this.orderForm.valid = Object.keys(orderErrors).length === 0;
 
-    const contactsErrors = this.buyerModel.validateContactsData();
-    this.contactsForm.errors = contactsErrors;
+    if(Object.keys(contactsErrors).length >= 0) {
+      this.contactsForm.errors = contactsErrors;
+    };
     this.contactsForm.valid = Object.keys(contactsErrors).length === 0;
   }
 
   private setOrderFormInput(field: string, value: string): void {
     this.buyerModel.setData({ [field]: value });
-    this.orderForm.address = value;
   }
 
   private setPaymentData(payment: TPayment): void {
     this.buyerModel.setData({ payment: payment });
-    this.orderForm.payment = payment;
   }
 
   private renderContactsForm(): void {
@@ -269,11 +272,6 @@ export class AppPresenter {
 
   private setContactsFormInput(field: string, value: string): void {
     this.buyerModel.setData({ [field]: value });
-    if(field === "email") {
-      this.contactsForm.email = value;
-    } else {
-      this.contactsForm.phone = value;
-    }
   }
 
   private postOrder(): void {
@@ -293,8 +291,6 @@ export class AppPresenter {
   private renderSuccess() {
     this.basketModel.clear();
     this.buyerModel.clear();
-    this.orderForm.clearForm();
-    this.contactsForm.clearForm();
 
     this.modal.render({
       content: this.success.render()
